@@ -68,12 +68,11 @@ def validate_and_parse(csv_path: Path) -> pd.DataFrame:
     df["DealerEx"] = pd.to_numeric(df["DealerEx"], errors="raise")
     df["StockAvailable"] = pd.to_numeric(df["StockAvailable"], errors="raise").astype("int64")
 
-    # Margin analysis, baked in so the columns are sortable/filterable like any other.
-    # Margin$   = RRPEx - DealerEx (dollar gross margin, ex-GST)
-    # MarginPct = (RRPEx - DealerEx) / RRPEx * 100  (gross margin percent)
-    # NaN when RRPEx is zero; AG Grid will render NaN as blank.
-    df["Margin"] = (df["RRPEx"] - df["DealerEx"]).round(2)
-    df["MarginPct"] = ((df["Margin"] / df["RRPEx"]) * 100).round(2)
+    # Drop columns we don't surface in the app. BundledItem1..5 aren't part of the
+    # browse workflow (see ADR-0014). Header validation above still checks the full
+    # DD-shipped schema, so we notice if DD ever changes upstream.
+    drop_cols = [c for c in df.columns if c.startswith("BundledItem")]
+    df = df.drop(columns=drop_cols)
     return df
 
 

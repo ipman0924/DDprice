@@ -18,4 +18,5 @@ Status values: `Proposed` → `Accepted` → (`Superseded by ADR-NNNN` | `Deprec
 - [ADR-0010](0010-stack-streamlit-pandas-aggrid.md) — Streamlit + pandas + streamlit-aggrid. **Accepted.**
 - [ADR-0011](0011-hosting-streamlit-cloud-public-repo.md) — Streamlit Community Cloud + public GitHub repo. **Accepted.**
 - [ADR-0012](0012-data-format-in-repo.md) — Data stored as Parquet in the repo. **Accepted.**
-- ADR-0013 — Bundle (parent/child) modeling. **Deferred** (not needed for MVP; revisit if bundle browsing is requested).
+- ADR-0013 — Bundle (parent/child) modeling. **No longer relevant** — columns dropped per ADR-0014.
+- [ADR-0014](0014-drop-bundle-and-margin-columns.md) — Drop `BundledItem1..5` and margin columns from the deployed schema. **Accepted.**

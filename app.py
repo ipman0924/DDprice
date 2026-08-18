@@ -59,28 +59,8 @@ def main() -> None:
     st.caption(
         f"Showing **{len(filtered):,}** of **{len(df):,}** SKUs. "
         "Per-column filter and sort are in the grid header. "
-        "`Margin` = RRPEx − DealerEx (ex-GST). `Margin %` = margin / RRP. "
         "`StockAvailable = 999999999` denotes unlimited items (services / training / licenses)."
     )
-
-    show_margin_summary = st.checkbox(
-        "Show margin summary for the current vendor selection",
-        value=False,
-    )
-    if show_margin_summary:
-        stocked = filtered[filtered["StockAvailable"].between(1, 999_999_998)]
-        with_price = stocked[(stocked["RRPEx"] > 0) & (stocked["DealerEx"] > 0)]
-        if len(with_price) == 0:
-            st.info("No in-stock SKUs with positive RRP and Dealer prices in this selection.")
-        else:
-            c1, c2, c3, c4 = st.columns(4)
-            c1.metric("SKUs (in stock, priced)", f"{len(with_price):,}")
-            c2.metric("Avg Margin %", f"{with_price['MarginPct'].mean():.1f}%")
-            c3.metric("Median Margin %", f"{with_price['MarginPct'].median():.1f}%")
-            c4.metric(
-                "Stock value @ Dealer",
-                f"${(with_price['DealerEx'] * with_price['StockAvailable']).sum():,.0f}",
-            )
 
     gb = GridOptionsBuilder.from_dataframe(filtered)
     gb.configure_default_column(
@@ -89,9 +69,8 @@ def main() -> None:
         resizable=True,
         floatingFilter=True,
     )
-    for col in ("RRPEx", "DealerEx", "StockAvailable", "Margin", "MarginPct"):
+    for col in ("RRPEx", "DealerEx", "StockAvailable"):
         gb.configure_column(col, type=["numericColumn", "numberColumnFilter"])
-    gb.configure_column("MarginPct", header_name="Margin %")
     gb.configure_pagination(paginationAutoPageSize=False, paginationPageSize=100)
     gb.configure_grid_options(domLayout="normal")
 

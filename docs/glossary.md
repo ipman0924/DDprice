@@ -14,7 +14,7 @@ Terms in this project. Column names use the exact casing from the Dicker Data fe
 - **Stock on hand (SOH)** — physical inventory DD holds. In the feed: `StockAvailable`.
 - **Unlimited-stock sentinel** — the literal value `999999999` in `StockAvailable`, used for non-physical items (training, software licenses, services). Must be translated in UI — never displayed as a number.
 - **ETA** — expected time of arrival for backordered items. Blank when in stock.
-- **Bundle / Kit** — a StockCode whose contents are other StockCodes. Referenced via `BundledItem1..5`.
+- **Bundle / Kit** — a StockCode whose contents are other StockCodes. Referenced via `BundledItem1..5` in the source CSV. Not surfaced in the app (see ADR-0014).
 
 ## Feed columns (as shipped)
 
@@ -33,7 +33,7 @@ Terms in this project. Column names use the exact casing from the Dicker Data fe
 | `ETA` | Expected arrival date | Blank when in stock or N/A. |
 | `Status` | Item lifecycle | Observed: `A` = Active. Others TBC. |
 | `Type` | Item classification | Observed: `StockedItem`. Others TBC. |
-| `BundledItem1..5` | Child SKUs (StockCodes) | Blank for non-bundles. |
+| `BundledItem1..5` | Child SKUs (StockCodes) | **Dropped by `refresh.py`** — not present in `data/feed.parquet` (ADR-0014). |
 
 ## Operational terms
 

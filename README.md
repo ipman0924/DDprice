@@ -76,7 +76,7 @@ Trigger a manual refresh any time via **Actions → Refresh DD feed → Run work
 - `StockAvailable = 999999999` means **unlimited** (services, training, software licenses). Displayed as-is per ADR-0007 so the column stays numerically sortable.
 - All prices are **ex-GST**.
 - `TertiaryCategory` is truncated to ~20 chars by DD upstream.
-- `BundledItem1..5` reference other `StockCode` values (kit/bundle contents). No dedicated bundle view in the MVP — see ADR-0013.
+- `BundledItem1..5` are dropped by `refresh.py` before writing the parquet (ADR-0014). The DD feed still ships them; we just don't surface them.
 
 ## License
 
