@@ -20,3 +20,4 @@ Status values: `Proposed` → `Accepted` → (`Superseded by ADR-NNNN` | `Deprec
 - [ADR-0012](0012-data-format-in-repo.md) — Data stored as Parquet in the repo. **Accepted.**
 - ADR-0013 — Bundle (parent/child) modeling. **No longer relevant** — columns dropped per ADR-0014.
 - [ADR-0014](0014-drop-bundle-and-margin-columns.md) — Drop `BundledItem1..5` and margin columns from the deployed schema. **Accepted.**
+- [ADR-0015](0015-soft-password-gate.md) — Soft-password gate on the app (UX only, not security). **Accepted.** Partially amends ADR-0011.

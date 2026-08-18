@@ -2,6 +2,7 @@
 
 Reads data/feed.parquet (produced by refresh.py) and renders an Excel-like grid.
 """
+import hmac
 import io
 import json
 from pathlib import Path
@@ -9,6 +10,8 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 from st_aggrid import AgGrid, DataReturnMode, GridOptionsBuilder, GridUpdateMode
+
+DEFAULT_PASSWORD = "jands"
 
 DATA_DIR = Path("data")
 FEED_PATH = DATA_DIR / "feed.parquet"
@@ -33,8 +36,39 @@ def load_meta() -> dict:
         return {}
 
 
+def _expected_password() -> str:
+    try:
+        return st.secrets["APP_PASSWORD"]
+    except Exception:
+        return DEFAULT_PASSWORD
+
+
+def check_password() -> bool:
+    if st.session_state.get("authed"):
+        return True
+    with st.form("login", clear_on_submit=True):
+        st.markdown("#### Enter password to view data")
+        pw = st.text_input(
+            "password",
+            type="password",
+            label_visibility="collapsed",
+            placeholder="Password",
+        )
+        submitted = st.form_submit_button("Enter")
+    if submitted:
+        if hmac.compare_digest(pw, _expected_password()):
+            st.session_state["authed"] = True
+            st.rerun()
+        else:
+            st.error("Incorrect password.")
+    return False
+
+
 def main() -> None:
     st.title("Dicker Data — Price & Stock")
+
+    if not check_password():
+        st.stop()
 
     if not FEED_PATH.exists():
         st.error(

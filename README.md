@@ -60,6 +60,13 @@ streamlit run app.py
 
 If the DD download URL/token ever changes, update the GitHub Actions secret — no code change needed.
 
+### App password
+
+The app prompts for a password before showing data (see ADR-0015). This is UX-only — the parquet file itself is public in the repo.
+
+- **Default password:** `jands` (hardcoded in `app.py`).
+- **To rotate:** Streamlit Cloud → app Settings → Secrets → add `APP_PASSWORD = "new-password"`. No code change needed.
+
 ## How the refresh works
 
 - Runs at **00:00 Sydney time** via two UTC cron entries (14:00 UTC for AEST, 13:00 UTC for AEDT). A time-gate step skips whichever one fires outside the intended window.
