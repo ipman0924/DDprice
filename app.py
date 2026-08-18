@@ -2,6 +2,7 @@
 
 Reads data/feed.parquet (produced by refresh.py) and renders an Excel-like grid.
 """
+import io
 import json
 from pathlib import Path
 
@@ -99,19 +100,22 @@ def main() -> None:
         gridOptions=gb.build(),
         height=650,
         data_return_mode=DataReturnMode.FILTERED_AND_SORTED,
-        update_mode=GridUpdateMode.NO_UPDATE,
+        update_mode=GridUpdateMode.FILTERING_CHANGED | GridUpdateMode.SORTING_CHANGED,
         allow_unsafe_jscode=False,
         enable_enterprise_modules=False,
         theme="streamlit",
     )
 
     displayed = pd.DataFrame(grid_return["data"]) if grid_return.get("data") is not None else filtered
-    csv_bytes = displayed.to_csv(index=False).encode()
+
+    buf = io.BytesIO()
+    with pd.ExcelWriter(buf, engine="xlsxwriter") as writer:
+        displayed.to_excel(writer, index=False, sheet_name="Feed")
     st.download_button(
-        label=f"Download filtered view as CSV ({len(displayed):,} rows)",
-        data=csv_bytes,
-        file_name="dd-price-stock-filtered.csv",
-        mime="text/csv",
+        label=f"Download filtered view as Excel ({len(displayed):,} rows)",
+        data=buf.getvalue(),
+        file_name="dd-price-stock-filtered.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
 
     refreshed_at = meta.get("refreshed_at", "unknown")
