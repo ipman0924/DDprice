@@ -1,0 +1,73 @@
+name: Refresh DD feed
+
+on:
+  schedule:
+    # 00:00 Australia/Sydney = 14:00 UTC (AEST, winter, UTC+10)
+    #                       = 13:00 UTC (AEDT, summer, UTC+11)
+    # The "sydney-gate" step below skips whichever run falls outside 00:00 Sydney
+    # so we don't refresh twice near daylight-saving transitions.
+    - cron: '0 14 * * *'
+    - cron: '0 13 * * *'
+  workflow_dispatch: {}
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Gate on Sydney time
+        id: gate
+        run: |
+          hour=$(TZ=Australia/Sydney date +%H)
+          echo "sydney_hour=$hour" >> "$GITHUB_OUTPUT"
+          if [ "$hour" = "00" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "proceed=true" >> "$GITHUB_OUTPUT"
+            echo "Proceeding — Sydney hour is $hour or manual dispatch."
+          else
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping — Sydney hour is $hour (avoids DST double-run)."
+          fi
+
+      - name: Checkout
+        if: steps.gate.outputs.proceed == 'true'
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        if: steps.gate.outputs.proceed == 'true'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install refresh dependencies
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          pip install --disable-pip-version-check \
+            'pandas>=2.0,<3.0' \
+            'pyarrow>=15.0' \
+            'requests>=2.31,<3.0'
+
+      - name: Run refresh
+        if: steps.gate.outputs.proceed == 'true'
+        env:
+          DD_DOWNLOAD_URL: ${{ secrets.DD_DOWNLOAD_URL }}
+        run: python refresh.py
+
+      - name: Commit updated data
+        if: steps.gate.outputs.proceed == 'true'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/feed.parquet data/meta.json
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            commit_msg="chore: refresh feed $(TZ=Australia/Sydney date '+%Y-%m-%d %H:%M %Z')"
+            git commit -m "$commit_msg"
+            git push
+          fi
